@@ -1,0 +1,47 @@
+import mongoose from "mongoose";
+
+const { Schema } = mongoose;
+
+const TicketSchema = new Schema(
+  {
+    showtimeId: {
+      type: Schema.Types.ObjectId,
+      ref: "Showtime",
+      required: true,
+    },
+    seats: {
+      type: String,
+    },
+    concession: {
+      type: String,
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    code: {
+      type: String,
+      unique: true,
+    },
+    isCancelled: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
+TicketSchema.index({ userId: 1, showtimeId: 1 }, { unique: true });
+
+export default mongoose.model("Ticket", TicketSchema);
