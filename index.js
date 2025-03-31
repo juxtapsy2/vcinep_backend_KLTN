@@ -77,6 +77,7 @@ const io = new Server(server, {
 
 // Chat
 const rooms = new Map();
+const unreadMessages = new Map();
 
 io.on("connection", (socket) => {
   console.log("A user connected to chat:", socket.id);
@@ -88,10 +89,15 @@ io.on("connection", (socket) => {
     if (!rooms.has(chatRoom)) {
       rooms.set(chatRoom, []);
     }
-    // Gửi danh sách phòng chỉ cho nhân viên
+    // Gửi danh sách phòng (chỉ cho nhân viên)
     io.emit("room-list", Array.from(rooms.keys()));
     // Cập nhật tin nhắn khi chuyển giữa các phòng
     socket.emit("loadMessages", rooms.get(chatRoom) || []);
+    // Khi nhân viên vào phòng, reset số tin chưa đọc
+    if (unreadMessages.has(chatRoom)) {
+      unreadMessages.set(chatRoom, 0);
+      io.emit("unread-messages", Object.fromEntries(unreadMessages));
+    }
     console.log(`User joined room: ${chatRoom}`);
   });
 
@@ -103,14 +109,38 @@ io.on("connection", (socket) => {
       room: room,
     };
     rooms.get(room).push(chatMessage);
+
+    // Cập nhật số lượng tin nhắn chưa đọc
+    if (!unreadMessages.has(room)) {
+      unreadMessages.set(room, 0);
+    }
+    unreadMessages.set(room, unreadMessages.get(room) + 1);
+    // Gửi tin chưa đọc cho nhân viên
+    io.emit("unread-messages", Object.fromEntries(unreadMessages));
+
+    // Nếu là tin nhắn đầu tiên, reply tự động
+    if (rooms.get(room).length === 1 && message.sender !== "Employee") {
+      setTimeout(() => {
+          const autoReply = {
+              text: "Xin chào, VCineP có thể giúp gì cho bạn?",
+              sender: "Employee",
+              room: room,
+              timestamp: Date.now(),
+          };
+          rooms.get(room).push(autoReply);
+          io.to(room).emit("receiveMessage", autoReply);
+      }, 1000); // Gửi sau 1 giây
+  }
     io.to(room).emit("receiveMessage", chatMessage);
-    // [Test only!!]
-    // Colorful console.log message content
-    console.log(`\x1b[36mRoom ${socket.currentRoom}\x1b[0m - \x1b[33m${message.sender}\x1b[0m said: \x1b[32m${message.text}\x1b[0m`);
+    // Cập nhật danh sách phòng trong trường hợp tin nhắn đến từ 1 người dùng mới
+    io.emit("room-list", Array.from(rooms.keys()));
+    // [For test only!!]
+    // Đọc nội dung tin nhắn trong console.log (highlighted)
+    console.log(`\x1b[36mRoom ${socket.currentRoom}\x1b[0m - \x1b[33m${message.sender ? message.sender : "Guest"}\x1b[0m said: \x1b[32m${message.text}\x1b[0m`);
   });
 
   socket.on("disconnect", () => {
-    console.log(`User ${socket.id} disconnected`);
+    console.log(`User ${socket.id} disconnected from chat.`);
   });
 });
 
