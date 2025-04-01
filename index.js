@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import http from "http";
 import connectDB from "./config/db.js";
+import { getSeatsData } from "./utils/getSeatsData.js";
 import authRoute from "./routes/auth.js";
 import userRoute from "./routes/user.js";
 import movieRoute from "./routes/movie.js";
@@ -21,8 +22,6 @@ import blogRouter from "./routes/blog.js";
 import quickTicketRouter from "./routes/quickticket.js";
 import statisticalRouter from "./routes/statistical.js";
 import { Server } from "socket.io";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 import SeatStatus from "./models/SeatStatusModel.js";
 import { createServer } from "node:http";
 dotenv.config();
@@ -48,35 +47,17 @@ app.use("/api/comment", commentRouter);
 app.use("/api/statistical", statisticalRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/gemini", geminiRoute);
-// Tích hợp Gemini API
-// const genAI = new GoogleGenerativeAI("AIzaSyBAZma1Jz_NIZQtD7UposRjE-b7u6IxjN8");
-// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// app.post("/api/gemini/generate", async (req, res) => {
-//   const { prompt } = req.body;
-
-//   if (!prompt) {
-//     return res.status(400).json({ message: "Prompt is required" });
-//   }
-
-//   try {
-//     const result = await model.generateContent(prompt);
-//     res.status(200).json({ response: result.response.text() });
-//   } catch (error) {
-//     console.error("Error generating content:", error);
-//     res.status(500).json({ message: "Error generating content" });
-//   }
-// });
 app.get("/", (req, res) => {
   res.send("Hello world!");
 });
+
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
 });
-
 // Chat
 const rooms = new Map();
 const unreadMessages = new Map();
@@ -276,32 +257,6 @@ io.on("connection", (socket) => {
     }
   });
 });
-// Hàm helper để lấy dữ liệu ghế
-async function getSeatsData(showtimeId) {
-  const seats = await SeatStatus.find({ showtimeId })
-    .populate({
-      path: "seatId",
-      select: "seatNumber row column type",
-    })
-    .populate({
-      path: "showtimeId",
-      select: "price",
-    })
-    .lean();
-
-  return seats.map((seat) => ({
-    id: seat._id,
-    userId: seat.IdUser,
-    row: seat.seatId.row,
-    col: seat.seatId.column,
-    status: seat.status,
-    price:
-      seat.seatId.type === "vip"
-        ? seat.showtimeId.price + 20000
-        : seat.showtimeId.price,
-    type: seat.seatId.type,
-  }));
-}
 const PORT = process.env.PORT || 8800;
 server.listen(PORT, () => {
   console.log(`Server đang chạy trên PORT: ${PORT}`);
