@@ -16,6 +16,7 @@ import paymentRoute from "./routes/payment.js";
 import ticketRoute from "./routes/ticket.js";
 import ratingRoute from "./routes/rating.js";
 import commentRouter from "./routes/comment.js";
+import geminiRoute from "./routes/gemini.js";
 import blogRouter from "./routes/blog.js";
 import quickTicketRouter from "./routes/quickticket.js";
 import statisticalRouter from "./routes/statistical.js";
@@ -46,25 +47,26 @@ app.use("/api/rating", ratingRoute);
 app.use("/api/comment", commentRouter);
 app.use("/api/statistical", statisticalRouter);
 app.use("/api/blog", blogRouter);
+app.use("/api/gemini", geminiRoute);
 // Tích hợp Gemini API
-const genAI = new GoogleGenerativeAI("AIzaSyBAZma1Jz_NIZQtD7UposRjE-b7u6IxjN8");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// const genAI = new GoogleGenerativeAI("AIzaSyBAZma1Jz_NIZQtD7UposRjE-b7u6IxjN8");
+// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-app.post("/api/gemini/generate", async (req, res) => {
-  const { prompt } = req.body;
+// app.post("/api/gemini/generate", async (req, res) => {
+//   const { prompt } = req.body;
 
-  if (!prompt) {
-    return res.status(400).json({ message: "Prompt is required" });
-  }
+//   if (!prompt) {
+//     return res.status(400).json({ message: "Prompt is required" });
+//   }
 
-  try {
-    const result = await model.generateContent(prompt);
-    res.status(200).json({ response: result.response.text() });
-  } catch (error) {
-    console.error("Error generating content:", error);
-    res.status(500).json({ message: "Error generating content" });
-  }
-});
+//   try {
+//     const result = await model.generateContent(prompt);
+//     res.status(200).json({ response: result.response.text() });
+//   } catch (error) {
+//     console.error("Error generating content:", error);
+//     res.status(500).json({ message: "Error generating content" });
+//   }
+// });
 app.get("/", (req, res) => {
   res.send("Hello world!");
 });
@@ -121,22 +123,26 @@ io.on("connection", (socket) => {
     // Nếu là tin nhắn đầu tiên, reply tự động
     if (rooms.get(room).length === 1 && message.sender !== "Employee") {
       setTimeout(() => {
-          const autoReply = {
-              text: "Xin chào, VCineP có thể giúp gì cho bạn?",
-              sender: "Employee",
-              room: room,
-              timestamp: Date.now(),
-          };
-          rooms.get(room).push(autoReply);
-          io.to(room).emit("receiveMessage", autoReply);
+        const autoReply = {
+          text: "Xin chào, VCineP có thể giúp gì cho bạn?",
+          sender: "Employee",
+          room: room,
+          timestamp: Date.now(),
+        };
+        rooms.get(room).push(autoReply);
+        io.to(room).emit("receiveMessage", autoReply);
       }, 1000); // Gửi sau 1 giây
-  }
+    }
     io.to(room).emit("receiveMessage", chatMessage);
     // Cập nhật danh sách phòng trong trường hợp tin nhắn đến từ 1 người dùng mới
     io.emit("room-list", Array.from(rooms.keys()));
     // [For test only!!]
     // Đọc nội dung tin nhắn trong console.log (highlighted)
-    console.log(`\x1b[36mRoom ${socket.currentRoom}\x1b[0m - \x1b[33m${message.sender ? message.sender : "Guest"}\x1b[0m said: \x1b[32m${message.text}\x1b[0m`);
+    console.log(
+      `\x1b[36mRoom ${socket.currentRoom}\x1b[0m - \x1b[33m${
+        message.sender ? message.sender : "Guest"
+      }\x1b[0m said: \x1b[32m${message.text}\x1b[0m`
+    );
   });
 
   socket.on("disconnect", () => {
