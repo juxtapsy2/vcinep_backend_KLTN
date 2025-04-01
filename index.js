@@ -47,7 +47,6 @@ app.use("/api/comment", commentRouter);
 app.use("/api/statistical", statisticalRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/gemini", geminiRoute);
-
 app.get("/", (req, res) => {
   res.send("Hello world!");
 });
@@ -130,7 +129,6 @@ io.on("connection", (socket) => {
     console.log(`User ${socket.id} disconnected from chat.`);
   });
 });
-
 // Seats
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
@@ -257,6 +255,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 const PORT = process.env.PORT || 8800;
 server.listen(PORT, () => {
   console.log(`Server đang chạy trên PORT: ${PORT}`);

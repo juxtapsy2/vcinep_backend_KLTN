@@ -1,5 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-const genAI = new GoogleGenerativeAI("AIzaSyBAZma1Jz_NIZQtD7UposRjE-b7u6IxjN8");
+import dotenv from "dotenv";
+dotenv.config();
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const chatBoxGemini = async (req, res) => {
