@@ -6,6 +6,7 @@ import {
   getCinemaTickets,
   getCinemaUsers,
   getCinemaMovieRevenue,
+  getDailyRevenueBetweenDates
 } from "../controller/Statistical.js"; // Import tất cả controller liên quan
 const router = express.Router();
 

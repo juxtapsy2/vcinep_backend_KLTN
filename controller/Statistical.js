@@ -324,3 +324,52 @@ export const getCinemaMovieRevenue = async (req, res) => {
     );
   }
 };
+
+export const getDailyRevenueBetweenDates = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Initialize the match conditions object
+    let matchConditions = {};
+
+    // Filter by date range if provided
+    if (startDate || endDate) {
+      matchConditions["createdAt"] = {};
+
+      if (startDate) {
+        matchConditions["createdAt"]["$gte"] = new Date(startDate); // Greater than or equal to start date
+      }
+
+      if (endDate) {
+        matchConditions["createdAt"]["$lte"] = new Date(endDate); // Less than or equal to end date
+      }
+    }
+
+    // Aggregate tickets and group them by day
+    const dailyRevenue = await Ticket.aggregate([
+      { $match: matchConditions }, // Apply the date filter if provided
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Group by date (YYYY-MM-DD)
+          totalRevenue: { $sum: "$totalPrice" }, // Sum total revenue for each day
+          totalTickets: { $sum: 1 }, // Count the number of tickets for each day
+        },
+      },
+      { $sort: { _id: 1 } }, // Sort by date in ascending order
+    ]);
+
+    if (!dailyRevenue || dailyRevenue.length === 0) {
+      return sendResponse(res, 200, false, "No revenue data found for the given dates");
+    }
+
+    return sendResponse(res, 200, true, "Daily revenue retrieved successfully", dailyRevenue);
+  } catch (error) {
+    console.error("Error in getDailyRevenueBetweenDates:", error);
+    return sendResponse(
+      res,
+      500,
+      false,
+      `Error retrieving daily revenue: ${error.message}`
+    );
+  }
+};
