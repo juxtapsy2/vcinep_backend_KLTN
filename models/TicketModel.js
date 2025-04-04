@@ -25,6 +25,11 @@ const TicketSchema = new Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    checkinStatus: {
+      type: String,
+      enum: ["checked_in", "not_checked_in"],
+      default: "not_checked_in",
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",

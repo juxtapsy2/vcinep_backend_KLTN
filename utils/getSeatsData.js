@@ -1,3 +1,4 @@
+import SeatStatus from "../models/SeatStatusModel.js";
 export const getSeatsData = async (showtimeId) => {
   try {
     const seats = await SeatStatus.find({ showtimeId })

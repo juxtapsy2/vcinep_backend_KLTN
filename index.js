@@ -24,6 +24,7 @@ import statisticalRouter from "./routes/statistical.js";
 import { Server } from "socket.io";
 import SeatStatus from "./models/SeatStatusModel.js";
 import { createServer } from "node:http";
+// import { getSeatsData } from "./utils/getSeatsData.js";
 dotenv.config();
 connectDB();
 const app = express();
