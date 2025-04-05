@@ -692,3 +692,35 @@ export const cancelTicket = async (req, res) => {
     );
   }
 };
+//Add by The Vi 2025-4-05
+export const getTicketsByShowtime = async (req, res) => {
+  try {
+    const { showtimeId } = req.params;
+
+    const existingShowtime = await Showtime.findById(showtimeId);
+    if (!existingShowtime) {
+      return sendResponse(res, 404, false, "Showtime not found");
+    }
+
+    // Tìm tất cả tickets theo showtimeId
+    const tickets = await Ticket.find({ showtimeId })
+      .populate("userId", "username email") // Lấy thêm thông tin user
+      .populate("showtimeId", "startTime endTime"); // Lấy thêm thông tin showtime
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Tickets retrieved successfully",
+      tickets
+    );
+  } catch (error) {
+    console.error("Error in getTicketsByShowtime:", error);
+    return sendResponse(
+      res,
+      500,
+      false,
+      "Error getting tickets: " + error.message
+    );
+  }
+};
