@@ -1,5 +1,9 @@
 import express from "express";
-import { addNewTicket, getTicketsByShowtime } from "../controller/Ticket.js";
+import {
+  addNewTicket,
+  checkTicketValidity,
+  getTicketsByShowtime,
+} from "../controller/Ticket.js";
 import {
   checkTicketExist,
   getTicketsByUserId,
@@ -76,4 +80,11 @@ router.put("/cancel/:ticketId", cancelTicket);
  * @access Private (Yêu cầu xác thực người dùng)
  */
 router.get("/showtime/:showtimeId", getTicketsByShowtime);
+/**
+ * API kiểm tra mã vé hợp lệ
+ * @route  GET /api/ticket/checkValid
+ * @description Lấy thông tin vé dựa trên showtimeId
+ * @access Private (Yêu cầu xác thực người dùng)
+ */
+router.post("/checkValid", checkTicketValidity);
 export default router;

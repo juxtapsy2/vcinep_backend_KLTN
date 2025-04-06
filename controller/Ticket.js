@@ -724,3 +724,47 @@ export const getTicketsByShowtime = async (req, res) => {
     );
   }
 };
+//Add by The Vi 2025-4-06
+export const checkTicketValidity = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    // Tìm vé và kiểm tra tồn tại
+    const ticket = await Ticket.findOne({ code });
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Mã vé không tồn tại",
+      });
+    }
+
+    // Kiểm tra trạng thái checkin
+    if (ticket.checkinStatus === "checked_in") {
+      return res.status(400).json({
+        success: false,
+        message: "Vé đã được checkin trước đó",
+      });
+    }
+
+    // Cập nhật trạng thái checkin và thời gian
+    ticket.checkinStatus = "checked_in";
+    ticket.date_checkin = new Date();
+    await ticket.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Checkin vé thành công",
+      ticket: {
+        code: ticket.code,
+        checkinStatus: ticket.checkinStatus,
+        date_checkin: ticket.date_checkin,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi checkin vé:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống khi checkin vé",
+    });
+  }
+};

@@ -15,6 +15,10 @@ const TicketSchema = new Schema(
     concession: {
       type: String,
     },
+    date_checkin: {
+      type: Date,
+      default: null,
+    },
     totalPrice: {
       type: Number,
       required: true,
