@@ -1,4 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+
+import {
+  getMoviesWithReasons,
+  getActiveMovies,
+  cleanRequest,
+  createMovieSuggestionPrompt,
+} from "../utils/suggestionMovieGemini.js"; // Đường dẫn đến hàm tạo prompt của bạn
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -13,7 +20,34 @@ export const chatBoxGemini = async (req, res) => {
 
   try {
     const result = await model.generateContent(prompt);
-    res.status(200).json({ response: result.response.text() });
+
+    const request = cleanRequest(result.response.text());
+
+    res.status(200).json({ response: request });
+  } catch (error) {
+    console.error("Error generating content:", error);
+    res.status(500).json({ message: "Error generating content" });
+  }
+};
+
+export const suggestionMovieGemini = async (req, res) => {
+  const { promptUser } = req.body;
+  if (!promptUser) {
+    return res.status(400).json({ message: "Prompt is required" });
+  }
+
+  try {
+    const movies = await getActiveMovies();
+
+    const prompt = createMovieSuggestionPrompt(movies, promptUser);
+
+    console.log("Prompt:", prompt);
+
+    const result = await model.generateContent(prompt);
+
+    const request = cleanRequest(result.response.text());
+    const requestMovies = await getMoviesWithReasons(request);
+    res.status(200).json({ response: requestMovies });
   } catch (error) {
     console.error("Error generating content:", error);
     res.status(500).json({ message: "Error generating content" });

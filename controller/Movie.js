@@ -423,3 +423,4 @@ export const updateMovieBySlug = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ nội bộ");
   }
 };
+//Add by The Vi 2025-4-06
