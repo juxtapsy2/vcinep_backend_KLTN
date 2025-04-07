@@ -147,10 +147,12 @@ Yêu cầu tìm phim: "${userPrompt}"
 Quy tắc:
 1. Chỉ gợi ý phim có trong danh sách
 2. Ưu tiên phim:
-   - Có rating cao
    - Phù hợp nhất với yêu cầu
    - Nội dung và thể loại tương đồng
    - Phù hợp với đánh giá và hiểu biết thực tế của bạn về bộ phim
+   - Phù hợp với những mô tả về phim
+   - Xem xét các yếu tố tất cả các yếu tố khác của phim.
+   - Gợi ý thêm một số phim tương tự hoặc có thể phù hợp với yêu cầu của người dùng
 3. Tối đa 5 gợi ý 
 4. Trả về chuỗi rỗng nếu không có phim phù hợp
 
