@@ -138,7 +138,7 @@ export const createMovieSuggestionPrompt = (movies, userPrompt) => {
     )
     .join(",\n");
 
-  return `Bạn là chuyên gia phim. Dựa trên danh sách phim và yêu cầu của người dùng, hãy gợi ý những phim phù hợp nhất.
+  return `Bạn là chuyên gia phim. Dựa trên danh sách phim và yêu cầu của người dùng, hãy gợi ý những phim phù hợp nhất. Còn dựa vào hiểu biết thực tế của bạn với các bộ phim này để đưa ra đề xuất chính xác nhất.
 
 Danh sách phim: [${movieContext}]
 
@@ -150,17 +150,17 @@ Quy tắc:
    - Có rating cao
    - Phù hợp nhất với yêu cầu
    - Nội dung và thể loại tương đồng
-3. Tối đa 5 gợi ý
+   - Phù hợp với đánh giá và hiểu biết thực tế của bạn về bộ phim
+3. Tối đa 5 gợi ý 
 4. Trả về chuỗi rỗng nếu không có phim phù hợp
 
 Chỉ trả về một chuỗi duy nhất theo format: [slug1:lý do 1], [slug2:lý do 2]
 Trong đó:
 - slug: định danh của phim
-- lý do: giải thích ngắn gọn bằng tiếng Việt tại sao phim này phù hợp, lý do phim đáp ứng yêu cầu người dùng, mô tả ngắn về phim
- 
+- lý do: giải thích ngắn gọn bằng tiếng Việt tại sao phim này phù hợp, lý do phim đáp ứng yêu cầu người dùng, mô tả ngắn về phim kết hợp với đánh giá thực tế từ bạn
 
 Ví dụ: 
-[phim-tinh-cam-1-Phim có rating cao 9/10:nội dung tình cảm lãng mạn phù hợp yêu cầu], [phim-tinh-cam-2:Thể loại rom-com nhẹ nhàng, diễn xuất tự nhiên]
+[phim-tinh-cam-1:Phim có rating cao 9/10, nội dung tình cảm lãng mạn phù hợp yêu cầu. Theo đánh giá thực tế, đây là một trong những phim tình cảm xuất sắc với diễn xuất tự nhiên], [phim-tinh-cam-2:Thể loại rom-com nhẹ nhàng, diễn xuất tự nhiên. bạn đánh giá cao những tình tiết hài hước và các tình huống dễ thương trong phim]
 
 Không thêm bất kỳ text hay format nào khác, chỉ trả về chuỗi chứa các cặp [slug:lý do] được ngăn cách bởi dấu phẩy.`;
 };
