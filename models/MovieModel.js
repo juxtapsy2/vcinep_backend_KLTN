@@ -80,18 +80,29 @@ const MovieSchema = new Schema(
   { timestamps: true }
 );
 
-// Create slug before saving
-MovieSchema.pre("save", function (next) {
+// Tạo slug trước khi lưu (thêm số ngẫu nhiên 4 chữ số để đảm bảo không trùng lặp)
+MovieSchema.pre("save", async function (next) {
   if (!this.slug || this.isModified("title")) {
-    this.slug = slugify(this.title, {
-      lower: true, // Convert to lowercase
-      strict: true, // Remove special characters
-      trim: true, // Trim whitespace from both ends
+    const baseSlug = slugify(this.title, {
+      lower: true, // chuyển thành chữ thường
+      strict: true, // loại bỏ ký tự đặc biệt
+      trim: true, // cắt khoảng trắng ở đầu và cuối
     });
+
+    let newSlug;
+    let slugExists = true;
+
+    // Sinh số ngẫu nhiên và kiểm tra xem slug đã tồn tại hay chưa
+    while (slugExists) {
+      const randomNum = Math.floor(1000 + Math.random() * 9000); // số ngẫu nhiên 4 chữ số
+      newSlug = `${baseSlug}-${randomNum}`;
+      slugExists = await this.constructor.findOne({ slug: newSlug });
+    }
+
+    this.slug = newSlug;
   }
   next();
 });
-
 // Ensure slug is unique
 MovieSchema.pre("save", async function (next) {
   const slugRegEx = new RegExp(`^(${this.slug})((-[0-9]*$)?)$`, "i");
