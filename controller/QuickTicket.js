@@ -68,28 +68,31 @@ export const getActiveCinemasByMovieId = async (req, res) => {
 export const getShowDatesByMovieAndCinema = async (req, res) => {
   const { movieId, cinemaId } = req.body;
 
-  // Nếu movieId hoặc cinemaId là null thì không xử lý
+  // Nếu thiếu movieId hoặc cinemaId
   if (!movieId || !cinemaId) {
     return sendResponse(res, 400, false, "Movie ID and Cinema ID are required");
   }
 
   try {
-    // Tìm tất cả các showtime có movieId và theaterId thuộc cinemaId
+    // Lấy ngày hiện tại và đặt về 00:00 để so sánh ngày
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Tìm tất cả showtime phù hợp
     const showtimes = await Showtime.find({
       movieId,
       status: "active",
+      showDate: { $gte: today }, // chỉ lấy các ngày >= hôm nay
     }).populate({
       path: "theaterId",
       model: "Theater",
       match: { cinemaId },
     });
 
-    // Tạo một mảng chứa showDate và idShowtime
     const showDateDetails = [];
 
     showtimes.forEach((showtime) => {
       if (showtime.theaterId && showtime.showDate) {
-        // Chuyển đổi showDate về kiểu Date nếu cần
         const showDate = new Date(showtime.showDate);
         if (!isNaN(showDate)) {
           showDateDetails.push({
@@ -100,7 +103,7 @@ export const getShowDatesByMovieAndCinema = async (req, res) => {
       }
     });
 
-    // Loại bỏ các bản ghi trùng lặp dựa trên `showDate`
+    // Loại bỏ các ngày trùng lặp
     const uniqueShowDateDetails = Array.from(
       new Map(showDateDetails.map((item) => [item.showDate, item])).values()
     );
@@ -109,7 +112,7 @@ export const getShowDatesByMovieAndCinema = async (req, res) => {
       res,
       200,
       true,
-      "Fetched show dates successfully",
+      "Fetched upcoming show dates successfully",
       uniqueShowDateDetails
     );
   } catch (error) {
@@ -117,6 +120,7 @@ export const getShowDatesByMovieAndCinema = async (req, res) => {
     return sendResponse(res, 500, false, "Internal server error");
   }
 };
+
 export const getShowtimesByMovieCinemaDate = async (req, res) => {
   const { movieId, cinemaId, showDate } = req.body;
 
