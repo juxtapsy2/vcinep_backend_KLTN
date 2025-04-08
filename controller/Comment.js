@@ -74,23 +74,32 @@ export const updateComment = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ");
   }
 };
-// Xóa bình luận
+
+const deleteCommentAndChildren = async (commentId) => {
+  const childComments = await Comment.find({ parentComment: commentId });
+
+  for (const child of childComments) {
+    await deleteCommentAndChildren(child._id);
+  }
+  await Comment.findByIdAndDelete(commentId);
+};
+
+// API xóa bình luận
 export const deleteComment = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedComment = await Comment.findByIdAndDelete(id);
-
-    if (!deletedComment) {
+    const commentExists = await Comment.findById(id);
+    if (!commentExists) {
       return sendResponse(res, 404, false, "Không tìm thấy bình luận");
     }
 
+    await deleteCommentAndChildren(id);
     return sendResponse(
       res,
       200,
       true,
-      "Xóa bình luận thành công",
-      deletedComment
+      "Xóa bình luận và các bình luận con thành công"
     );
   } catch (error) {
     console.error("Lỗi trong deleteComment:", error);
