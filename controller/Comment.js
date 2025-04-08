@@ -1,16 +1,37 @@
 import Comment from "../models/CommentModel.js";
 import { sendResponse } from "../utils/responseHandler.js";
-
+import mongoose from "mongoose";
 // Thêm một bình luận mới
 export const addComment = async (req, res) => {
   try {
-    const { movie, user, content } = req.body;
+    const { movie, user, content, parentComment } = req.body;
 
     if (!movie || !user || !content) {
       return sendResponse(res, 400, false, "Thiếu thông tin bắt buộc");
     }
 
-    const newComment = new Comment({ movie, user, content });
+    // Tạo object chứa dữ liệu comment
+    const commentData = {
+      movie,
+      user,
+      content,
+    };
+
+    // Chỉ thêm parentComment vào nếu nó có giá trị và hợp lệ
+    if (parentComment && parentComment !== "null" && parentComment !== "") {
+      try {
+        // Kiểm tra xem parentComment có phải là ObjectId hợp lệ không
+        if (mongoose.Types.ObjectId.isValid(parentComment)) {
+          commentData.parentComment = new mongoose.Types.ObjectId(
+            parentComment
+          );
+        }
+      } catch (error) {
+        console.error("Lỗi chuyển đổi parentComment:", error);
+      }
+    }
+
+    const newComment = new Comment(commentData);
     await newComment.save();
 
     return sendResponse(
@@ -25,7 +46,6 @@ export const addComment = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ");
   }
 };
-
 // Sửa bình luận
 export const updateComment = async (req, res) => {
   try {
@@ -54,7 +74,6 @@ export const updateComment = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ");
   }
 };
-
 // Xóa bình luận
 export const deleteComment = async (req, res) => {
   try {
@@ -87,7 +106,7 @@ export const getCommentsByMovie = async (req, res) => {
     }
 
     const comments = await Comment.find({ movie: movieId, status: "active" })
-      .populate("user", "name email avatar") // Lấy thêm thông tin người dùng
+      .populate("user", "name email avatar username") // Lấy thêm thông tin người dùng
       .sort({ createdAt: -1 }); // Sắp xếp theo thời gian mới nhất
 
     if (!comments || comments.length === 0) {
