@@ -5,6 +5,7 @@ import {
   updateBlogBySlug,
   deleteBlogBySlug,
   getAllBlogs,
+  incrementBlogView,
 } from "../controller/Blog.js";
 const router = express.Router();
 /**
@@ -37,4 +38,5 @@ router.delete("/:slug", deleteBlogBySlug);
  * @access Public
  */
 router.post("/all", getAllBlogs);
+router.put("/:slug/increment-view", incrementBlogView);
 export default router;

@@ -143,3 +143,32 @@ export const getAllBlogs = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ nội bộ");
   }
 };
+//Cập nhật view của blog
+// Tăng view của blog
+export const incrementBlogView = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // Tìm và tăng view của blog lên 1
+    const updatedBlog = await Blog.findOneAndUpdate(
+      { slug },
+      { $inc: { views: 1 } }, // Sử dụng $inc để tăng giá trị views lên 1
+      { new: true } // Trả về document sau khi đã được cập nhật
+    );
+
+    if (!updatedBlog) {
+      return sendResponse(res, 404, false, "Blog not found");
+    }
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Blog view incremented successfully",
+      updatedBlog
+    );
+  } catch (error) {
+    console.error("Error in incrementBlogView:", error);
+    return sendResponse(res, 500, false, "Internal server error");
+  }
+};
