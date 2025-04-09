@@ -4,21 +4,25 @@ const { Schema } = mongoose;
 
 const PriceSchema = new Schema(
   {
+    //Trước 17h từ T2 đến T6
     type1Price: {
       type: Number,
       required: true,
       min: 0,
     },
+    // Sau 17h từ T2 đến T6
     type2Price: {
       type: Number,
       required: true,
       min: 0,
     },
+    //Trước 17h thứ 7, CN
     type3Price: {
       type: Number,
       required: true,
       min: 0,
     },
+    // Sau 17h thứ 7, CN
     type4Price: {
       type: Number,
       required: true,

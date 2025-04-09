@@ -204,6 +204,7 @@ export const addNewShowtime = async (req, res) => {
     return sendResponse(res, 500, false, "Error adding new showtime");
   }
 };
+
 export const getMovieShowDates = async (req, res) => {
   try {
     const { slug } = req.body;
