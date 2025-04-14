@@ -8,6 +8,7 @@ import {
   addMultipleShowtimes,
   addMultipleShowtimesTheater,
   deleteShowtime,
+  getFullShowtimesByDate,
 } from "../controller/ShowTime.js";
 import { authenticateUser } from "../middleware/authenticateUser.js";
 const router = express.Router();
@@ -52,4 +53,7 @@ router.post("/list", getAllShowtimes);
 router.post("/multiple", addMultipleShowtimes);
 router.post("/multiplebytheater", addMultipleShowtimesTheater);
 router.delete("/:showtimeId", authenticateUser, deleteShowtime);
+//Add by The Vi 14/4/2024
+router.post("/getFullShowtimesByDate", getFullShowtimesByDate);
+
 export default router;

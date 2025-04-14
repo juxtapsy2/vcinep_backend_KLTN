@@ -781,3 +781,113 @@ export const deleteShowtime = async (req, res) => {
     return sendResponse(res, 500, false, "Internal server error");
   }
 };
+//Add by The Vi 14/4/2025
+export const getFullShowtimesByDate = async (req, res) => {
+  try {
+    const { date } = req.body; // Định dạng: "14-02-2025"
+
+    // Kiểm tra ngày hợp lệ
+    if (!date || !/^\d{2}-\d{2}-\d{4}$/.test(date)) {
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Invalid date format. Please use DD-MM-YYYY"
+      );
+    }
+
+    // Chuyển đổi ngày từ "DD-MM-YYYY" sang "YYYY-MM-DD"
+    const [day, month, year] = date.split("-");
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Tạo đối tượng Date từ ngày đã định dạng
+    const showDate = new Date(formattedDate);
+    if (isNaN(showDate.getTime())) {
+      return sendResponse(res, 400, false, "Invalid date");
+    }
+
+    // Lấy tất cả các suất chiếu trong ngày và populate toàn bộ thông tin phim
+    const showtimes = await Showtime.find({
+      showDate: showDate,
+      status: "active",
+    }).populate({
+      path: "movieId",
+      select:
+        "title slug description genre classification duration format director actors language startDate endDate trailer coverImage rating views status",
+    });
+
+    if (!showtimes || showtimes.length === 0) {
+      return sendResponse(res, 200, false, "No showtimes found for this date");
+    }
+
+    // Nhóm các suất chiếu theo phim
+    const moviesMap = new Map();
+
+    showtimes.forEach((showtime) => {
+      const movieId = showtime.movieId._id.toString();
+
+      if (!moviesMap.has(movieId)) {
+        moviesMap.set(movieId, {
+          movie: {
+            _id: showtime.movieId._id,
+            title: showtime.movieId.title,
+            slug: showtime.movieId.slug,
+            description: showtime.movieId.description,
+            genre: showtime.movieId.genre,
+            classification: showtime.movieId.classification,
+            duration: showtime.movieId.duration,
+            format: showtime.movieId.format,
+            director: showtime.movieId.director,
+            actors: showtime.movieId.actors,
+            language: showtime.movieId.language,
+            startDate: showtime.movieId.startDate,
+            endDate: showtime.movieId.endDate,
+            trailer: showtime.movieId.trailer,
+            coverImage: showtime.movieId.coverImage,
+            rating: showtime.movieId.rating,
+            views: showtime.movieId.views,
+            status: showtime.movieId.status,
+            // Thêm các trường khác nếu cần
+          },
+          showtimes: [],
+        });
+      }
+
+      moviesMap.get(movieId).showtimes.push({
+        _id: showtime._id,
+        showTime: showtime.showTime,
+        theaterId: showtime.theaterId,
+        type: showtime.type,
+        price: showtime.price,
+        availableSeats: showtime.availableSeats,
+      });
+    });
+
+    // Chuyển Map thành mảng
+    const result = Array.from(moviesMap.values());
+
+    // Sắp xếp các suất chiếu theo thời gian
+    result.forEach((movie) => {
+      movie.showtimes.sort((a, b) => {
+        const timeA = a.showTime.split(":").map(Number);
+        const timeB = b.showTime.split(":").map(Number);
+        return timeA[0] - timeB[0] || timeA[1] - timeB[1];
+      });
+    });
+
+    return sendResponse(
+      res,
+      200,
+      true,
+      "Showtimes with full movie details retrieved successfully",
+      result
+    );
+  } catch (error) {
+    console.error(
+      "Error getting showtimes with full movie details by date:",
+      error
+    );
+    return sendResponse(res, 500, false, "Internal server error");
+  }
+};
+//End by The Vi 14/4/2025
