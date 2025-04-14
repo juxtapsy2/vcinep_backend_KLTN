@@ -5,8 +5,53 @@ import Showtime from "../models/ShowtimeModel.js";
 import Movie from "../models/MovieModel.js";
 import Cinema from "../models/CinemaModel.js";
 import SeatStatus from "../models/SeatStatusModel.js";
+import Price from "../models/PriceModel.js";
 
 import moment from "moment"; // Import moment.js để làm việc với ngày tháng dễ dàng hơn
+
+export const calculatePricesForMultipleShowtimes = async (
+  showTimes,
+  showDate
+) => {
+  try {
+    // Lấy cấu hình giá active
+    const activePrice = await Price.findOne({ isActive: true });
+    if (!activePrice) {
+      throw new Error("No active price configuration found");
+    }
+
+    // Chuyển đổi showDate string thành Date object
+    const showDateObj =
+      showDate instanceof Date ? showDate : new Date(showDate);
+
+    // Xác định ngày trong tuần (0 = Chủ nhật, 1-6 = Thứ 2 đến Thứ 7)
+    const dayOfWeek = showDateObj.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    // Map qua mảng showTimes để tính giá cho từng suất chiếu
+    const priceMap = showTimes.map((showTime) => {
+      const hour = parseInt(showTime.split(":")[0]);
+      const isAfter17 = hour >= 17;
+
+      let basePrice;
+      if (isWeekend) {
+        basePrice = isAfter17 ? activePrice.type4Price : activePrice.type3Price;
+      } else {
+        basePrice = isAfter17 ? activePrice.type2Price : activePrice.type1Price;
+      }
+
+      return {
+        showTime,
+        price: basePrice,
+      };
+    });
+
+    return priceMap;
+  } catch (error) {
+    throw new Error(`Error calculating ticket prices: ${error.message}`);
+  }
+};
+
 export const getShowtimeByMovie = async (req, res) => {
   try {
     const { slug, showDate, address, cinemaId } = req.body;
@@ -129,7 +174,7 @@ export const addNewShowtime = async (req, res) => {
   try {
     const { theaterId, movieId, showDate, showTime, status, price, type } =
       req.body;
-
+    price = 9999;
     const theater = await Theater.findById(theaterId).populate("cinemaId");
     if (!theater) {
       return sendResponse(res, 404, false, "Theater not found");
@@ -463,7 +508,19 @@ export const getAllShowtimes = async (req, res) => {
 };
 export const addMultipleShowtimes = async (req, res) => {
   try {
-    const { movieId, showTime, showDate, status, price, type } = req.body;
+    const { movieId, showTime, showDate, status, type } = req.body;
+
+    // Tính giá cho tất cả các suất chiếu
+    const priceCalculations = await calculatePricesForMultipleShowtimes(
+      showTime,
+      showDate,
+      type
+    );
+
+    // Tạo map để tra cứu giá nhanh theo showTime
+    const priceMap = Object.fromEntries(
+      priceCalculations.map((item) => [item.showTime, item.price])
+    );
 
     const movie = await Movie.findById(movieId);
     if (!movie) {
@@ -486,12 +543,9 @@ export const addMultipleShowtimes = async (req, res) => {
       return sendResponse(res, 400, false, "Show date cannot be in the past");
     }
 
-    // Mảng lưu thông tin về các suất chiếu được phân bổ
     const showtimeAllocations = [];
-    // Mảng lưu các xung đột
     const conflicts = [];
 
-    // Kiểm tra tất cả các rạp và thời gian trước
     for (const cinema of cinemas) {
       const theaters = await Theater.find({
         cinemaId: cinema._id,
@@ -510,7 +564,9 @@ export const addMultipleShowtimes = async (req, res) => {
           }).populate("movieId");
 
           if (!existingShowtime) {
-            // Lưu thông tin phân bổ để tạo sau
+            // Lấy giá từ priceMap cho suất chiếu cụ thể
+            const price = priceMap[time];
+
             showtimeAllocations.push({
               theaterId: theater._id,
               movieId,
@@ -540,7 +596,6 @@ export const addMultipleShowtimes = async (req, res) => {
       }
     }
 
-    // Nếu có bất kỳ xung đột nào, trả về lỗi và không tạo suất chiếu nào
     if (conflicts.length > 0) {
       return sendResponse(
         res,
@@ -554,7 +609,6 @@ export const addMultipleShowtimes = async (req, res) => {
       );
     }
 
-    // Nếu không có xung đột, tạo tất cả các suất chiếu
     const createdShowtimes = [];
     for (const allocation of showtimeAllocations) {
       const newShowtime = new Showtime(allocation);
@@ -576,9 +630,18 @@ export const addMultipleShowtimes = async (req, res) => {
 };
 export const addMultipleShowtimesTheater = async (req, res) => {
   try {
-    const { movieId, showTime, showDate, status, price, type, theaterId } =
-      req.body;
+    const { movieId, showTime, showDate, status, type, theaterId } = req.body;
+    // Tính giá cho tất cả các suất chiếu
+    const priceCalculations = await calculatePricesForMultipleShowtimes(
+      showTime,
+      showDate,
+      type
+    );
 
+    // Tạo map để tra cứu giá nhanh theo showTime
+    const priceMap = Object.fromEntries(
+      priceCalculations.map((item) => [item.showTime, item.price])
+    );
     // Validate movie exists
     const movie = await Movie.findById(movieId);
     if (!movie) {
@@ -625,6 +688,7 @@ export const addMultipleShowtimesTheater = async (req, res) => {
           date: showDate,
         });
       } else {
+        const price = priceMap[time];
         showtimeAllocations.push({
           theaterId,
           movieId,

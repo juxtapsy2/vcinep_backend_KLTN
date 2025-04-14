@@ -1,6 +1,13 @@
 import SeatStatus from "../models/SeatStatusModel.js";
+import Price from "../models/PriceModel.js";
 export const getSeatsData = async (showtimeId) => {
   try {
+    // Lấy bảng giá đang active
+    const activePrice = await Price.findOne({ isActive: true });
+    if (!activePrice) {
+      throw new Error("No active price configuration found");
+    }
+
     const seats = await SeatStatus.find({ showtimeId })
       .populate({
         path: "seatId",
@@ -20,7 +27,7 @@ export const getSeatsData = async (showtimeId) => {
       status: seat.status,
       price:
         seat.seatId.type === "vip"
-          ? seat.showtimeId.price + 20000
+          ? seat.showtimeId.price + activePrice.vipRegularDiff
           : seat.showtimeId.price,
       type: seat.seatId.type,
     }));
