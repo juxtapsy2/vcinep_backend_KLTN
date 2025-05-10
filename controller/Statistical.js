@@ -325,51 +325,39 @@ export const getCinemaMovieRevenue = async (req, res) => {
   }
 };
 
-export const getDailyRevenueBetweenDates = async (req, res) => {
+export const getTicketsBetweenDates = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+    console.log("Received Query Params:", req.query);
 
-    // Initialize the match conditions object
-    let matchConditions = {};
+    let filterQuery = {};
 
-    // Filter by date range if provided
-    if (startDate || endDate) {
-      matchConditions["createdAt"] = {};
+    // Chuyển string thành Date object
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
 
-      if (startDate) {
-        matchConditions["createdAt"]["$gte"] = new Date(startDate); // Greater than or equal to start date
-      }
-
-      if (endDate) {
-        matchConditions["createdAt"]["$lte"] = new Date(endDate); // Less than or equal to end date
-      }
+    // Nếu có endDate, cần cộng thêm 1 ngày để bao phủ hết ngày đó (00:00 ngày hôm sau)
+    if (start && end) {
+      end.setDate(end.getDate() + 1); // để bao hết cả ngày endDate
+      filterQuery.createdAt = { $gte: start, $lt: end };
+    } else if (start) {
+      filterQuery.createdAt = { $gte: start };
+    } else if (end) {
+      end.setDate(end.getDate() + 1);
+      filterQuery.createdAt = { $lt: end };
     }
 
-    // Aggregate tickets and group them by day
-    const dailyRevenue = await Ticket.aggregate([
-      { $match: matchConditions }, // Apply the date filter if provided
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, // Group by date (YYYY-MM-DD)
-          totalRevenue: { $sum: "$totalPrice" }, // Sum total revenue for each day
-          totalTickets: { $sum: 1 }, // Count the number of tickets for each day
-        },
-      },
-      { $sort: { _id: 1 } }, // Sort by date in ascending order
-    ]);
-
-    if (!dailyRevenue || dailyRevenue.length === 0) {
-      return sendResponse(res, 200, false, "No revenue data found for the given dates");
-    }
-
-    return sendResponse(res, 200, true, "Daily revenue retrieved successfully", dailyRevenue);
-  } catch (error) {
-    console.error("Error in getDailyRevenueBetweenDates:", error);
-    return sendResponse(
-      res,
-      500,
-      false,
-      `Error retrieving daily revenue: ${error.message}`
+    const tickets = await Ticket.find(filterQuery).select(
+      "_id showtimeId seats concession totalPrice status userId code createdAt updatedAt"
     );
+
+    if (!tickets || tickets.length === 0) {
+      return sendResponse(res, 200, false, "Không tìm thấy vé");
+    }
+
+    return sendResponse(res, 200, true, "Lấy vé trong khoảng thời gian thành công", tickets);
+  } catch (error) {
+    console.error("Error in getTicketsBetweenDates:", error);
+    return sendResponse(res, 500, false, `Error retrieving tickets between dates: ${error.message}`);
   }
 };

@@ -248,3 +248,69 @@ export const updateUserInfo = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ nội bộ");
   }
 };
+
+export const createUser = async (req, res) => {
+  const { username, gender, dateOfBirth, phoneNumber, email, password, role, idCinema, } = req.body;
+  console.log("Try creating user with data:", req.body);
+  try {
+    const newUser = new User({
+      username,
+      avatar: "",
+      gender,
+      dateOfBirth,
+      phoneNumber,
+      email,
+      password,
+      role,
+      status: "active",
+      idCinema,
+    });
+
+    await newUser.save();
+    console.log("User save:", username);
+    return sendResponse(
+      res,
+      200,
+      true,
+      "New user added successfully",
+      newUser
+    );
+  } catch (error) {
+    console.error("Error in createUser:", error);
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return sendResponse(
+        res,
+        400,
+        false,
+        `Duplicate field: ${field} already exists`
+      );
+    }
+    // missing required fields
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((val) => val.message);
+      return sendResponse(res, 400, false, messages.join(", "));
+    }
+    return sendResponse(res, 500, false, "Lỗi server");
+  }
+};
+
+export const updateUserStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  console.log("Try updating user status:", id, status);
+  try {
+    const updatedUser = User.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedUser)
+      return sendResponse(res, 404, false, "Không tìm thấy người dùng");
+    return sendResponse(res, 200, true, "Cập nhật trạng thái thành công", updatedUser);
+  } catch (error) {
+    console.log("Error in updateUserStatus:", error);
+    sendResponse(res, 500, false, "Lỗi server");
+  }
+};

@@ -6,6 +6,8 @@ import {
   deleteUser,
   reactivateUser,
   updateUserInfo,
+  createUser,
+  updateUserStatus,
 } from "../controller/User.js";
 import { authenticateCurrentUser } from "../middleware/authenticateCurrentUser.js";
 import { authenticateAdmin } from "../middleware/authenticateAdmin.js";
@@ -58,5 +60,8 @@ router.patch("/:id/reactivate", reactivateUser);
  * @example PATCH /api/user/info { username: "newname" }
  */
 router.patch("/info", updateUserInfo);
+
+router.post("/new", authenticateAdmin, createUser);
+router.post("/status/:id", authenticateAdmin, updateUserStatus);
 
 export default router;

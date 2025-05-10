@@ -6,7 +6,7 @@ import {
   getCinemaTickets,
   getCinemaUsers,
   getCinemaMovieRevenue,
-  getDailyRevenueBetweenDates
+  getTicketsBetweenDates
 } from "../controller/Statistical.js"; // Import tất cả controller liên quan
 const router = express.Router();
 
@@ -14,6 +14,7 @@ const router = express.Router();
 router.get("/ticket", getAllTickets);
 router.get("/user", getAllUsers);
 router.get("/movie-revenue", getMovieRevenue);
+router.get("/ticket/between-dates", getTicketsBetweenDates);
 
 // Tất cả routes đều yêu cầu theaterId và xác thực quyền quản lý rạp
 router.get("/:cinemaId/tickets", getCinemaTickets);
