@@ -7,7 +7,7 @@ import {
   reactivateUser,
   updateUserInfo,
   createUser,
-  updateUserStatus,
+  updateUserRole,
 } from "../controller/User.js";
 import { authenticateCurrentUser } from "../middleware/authenticateCurrentUser.js";
 import { authenticateAdmin } from "../middleware/authenticateAdmin.js";
@@ -49,6 +49,7 @@ router.post("/list", getAllUsers);
  * @param {String} id - ID của user cần xóa
  * @author TheVi
  */
+router.put("/role/:id", authenticateAdmin, updateUserRole);
 router.delete("/:id", deleteUser);
 router.patch("/:id/reactivate", reactivateUser);
 /**
@@ -62,6 +63,5 @@ router.patch("/:id/reactivate", reactivateUser);
 router.patch("/info", updateUserInfo);
 
 router.post("/new", authenticateAdmin, createUser);
-router.post("/status/:id", authenticateAdmin, updateUserStatus);
 
 export default router;

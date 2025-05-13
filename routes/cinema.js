@@ -10,6 +10,7 @@ import {
   getShowtimesByCinemaId,
   updateCinema,
   deleteCinema,
+  getAllCinemaSlugs,
 } from "../controller/Cinema.js";
 const router = express.Router();
 router.get("/active", getActiveCinemas);
@@ -40,6 +41,7 @@ router.post("/all", getAllCinemas);
  */
 router.get("/getCinemaBySlug/:slug", getCinemaBySlug);
 router.get("/custom", getAllCinemasCustom); // Lấy tất cả rạp (_id, name)
+router.get("/slugs", getAllCinemaSlugs);
 
 /**
  * API lấy thông tin một cinema theo ID
@@ -49,6 +51,7 @@ router.get("/custom", getAllCinemasCustom); // Lấy tất cả rạp (_id, name
  */
 router.get("/:id", getCinemaById);
 router.get("/slug/:id", getCinemaSlugById);
+
 /**
  * API cập nhật thông tin cinema
  * @route PATCH /api/cinema/:id

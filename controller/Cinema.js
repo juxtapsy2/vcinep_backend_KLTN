@@ -326,3 +326,13 @@ export const deleteCinema = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ nội bộ");
   }
 };
+
+export const getAllCinemaSlugs = async (req, res) => {
+  try {
+    const cinemas = await Cinema.find().select("id slug");
+    return sendResponse(res, 200, true, "Lấy danh sách slug rạp thành công", { cinemas });
+  } catch (error) {
+    console.error("Error in getAllCinemaSlugs:", error);
+    return sendResponse(res, 500, false, "Lỗi máy chủ nội bộ");
+  }
+};

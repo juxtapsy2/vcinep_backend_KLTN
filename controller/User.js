@@ -295,22 +295,33 @@ export const createUser = async (req, res) => {
   }
 };
 
-export const updateUserStatus = async (req, res) => {
+export const updateUserRole = async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
-  console.log("Try updating user status:", id, status);
+  const { role, idCinema } = req.body;
+  console.log("Try updating user role:", id, role);
+
   try {
-    const updatedUser = User.findByIdAndUpdate(
+    if (role === "Manager" && !idCinema) {
+      return sendResponse(res, 400, false, "Cần cung cấp cinemaId cho vai trò Quản lý");
+    }
+
+    const updateData = { role };
+    if (role === "Manager") {
+      updateData.idCinema = idCinema;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
       id,
-      { status },
+      updateData,
       { new: true, runValidators: true },
     );
 
     if (!updatedUser)
       return sendResponse(res, 404, false, "Không tìm thấy người dùng");
-    return sendResponse(res, 200, true, "Cập nhật trạng thái thành công", updatedUser);
+    console.log("User role updated:", id, role);
+    return sendResponse(res, 200, true, "Cập nhật vai trò thành công", updatedUser);
   } catch (error) {
-    console.log("Error in updateUserStatus:", error);
+    console.log("Error in updateUserRole:", error);
     sendResponse(res, 500, false, "Lỗi server");
   }
 };
