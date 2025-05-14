@@ -1,6 +1,7 @@
 import { sendResponse } from "../utils/responseHandler.js";
 import jwt from "jsonwebtoken";
 import User from "../models/UserModel.js";
+import * as argon2 from "argon2";
 
 export const getUserById = async (req, res) => {
   try {
@@ -257,6 +258,7 @@ export const createUser = async (req, res) => {
     if (!name || name.trim() === "") {
       name = undefined; // if name = "" => set to undefined to use the default value
     }
+    const hashedPassword = await argon2.hash(password);
     const newUser = new User({
       name,
       username,
@@ -265,7 +267,7 @@ export const createUser = async (req, res) => {
       dateOfBirth,
       phoneNumber,
       email,
-      password,
+      password: hashedPassword,
       role,
       status: "active",
       ...(idCinema && { idCinema }),  // only include if valid
