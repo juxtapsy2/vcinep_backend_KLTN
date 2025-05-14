@@ -3,6 +3,10 @@ const { Schema } = mongoose;
 
 const UserSchema = new Schema(
   {
+    name: {
+      type: String,
+      default: "Vô danh",
+    },
     username: {
       type: String,
       required: true,

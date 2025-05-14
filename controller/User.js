@@ -250,10 +250,15 @@ export const updateUserInfo = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  const { username, gender, dateOfBirth, phoneNumber, email, password, role, idCinema, } = req.body;
+  let { name, username, gender, dateOfBirth, phoneNumber, email, password, role, idCinema, } = req.body;
+  
   console.log("Try creating user with data:", req.body);
   try {
+    if (!name || name.trim() === "") {
+      name = undefined; // if name = "" => set to undefined to use the default value
+    }
     const newUser = new User({
+      name,
       username,
       avatar: "",
       gender,
@@ -263,11 +268,11 @@ export const createUser = async (req, res) => {
       password,
       role,
       status: "active",
-      idCinema,
+      ...(idCinema && { idCinema }),  // only include if valid
     });
-
+  
     await newUser.save();
-    console.log("User save:", username);
+    console.log("User saved:", username);
     return sendResponse(
       res,
       200,
@@ -301,14 +306,7 @@ export const updateUserRole = async (req, res) => {
   console.log("Try updating user role:", id, role);
 
   try {
-    if (role === "Manager" && !idCinema) {
-      return sendResponse(res, 400, false, "Cần cung cấp cinemaId cho vai trò Quản lý");
-    }
-
-    const updateData = { role };
-    if (role === "Manager") {
-      updateData.idCinema = idCinema;
-    }
+    const updateData = { role, ...(idCinema && {idCinema}) };
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
