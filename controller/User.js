@@ -251,16 +251,12 @@ export const updateUserInfo = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  let { name, username, gender, dateOfBirth, phoneNumber, email, password, role, idCinema, } = req.body;
+  let { username, gender, dateOfBirth, phoneNumber, email, password, role, idCinema, } = req.body;
   
   console.log("Try creating user with data:", req.body);
   try {
-    if (!name || name.trim() === "") {
-      name = undefined; // if name = "" => set to undefined to use the default value
-    }
     const hashedPassword = await argon2.hash(password);
     const newUser = new User({
-      name,
       username,
       avatar: "",
       gender,
