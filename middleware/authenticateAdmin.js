@@ -14,7 +14,7 @@ export const authenticateAdmin = (req, res, next) => {
 
     console.log("Decoded Token:", decodedToken); // Debug log
 
-    if (decodedToken.role !== "Administrator"  && decodedToken.role !== "Admin") {
+    if (decodedToken.role !== "Admin") {
       console.log("Access denied. Role is:", decodedToken.role); // Debug log
       return sendResponse(
         res,

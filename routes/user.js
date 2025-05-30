@@ -8,19 +8,11 @@ import {
   updateUserInfo,
   createUser,
   updateUserRole,
+  getEmployees,
 } from "../controller/User.js";
 import { authenticateCurrentUser } from "../middleware/authenticateCurrentUser.js";
 import { authenticateAdmin } from "../middleware/authenticateAdmin.js";
 const router = express.Router();
-
-/**
- * API lấy thông tin người dùng theo ID
- * @route GET /api/user/:id
- * @description Người dùng lấy thông tin của mình
- * @access User, Staff, Manager, Administrator.
- * @author TheVi
- */
-router.get("/:id", getUserById);
 
 /**
  * API người dùng update avatar
@@ -49,6 +41,7 @@ router.post("/list", getAllUsers);
  * @param {String} id - ID của user cần xóa
  * @author TheVi
  */
+router.get("/employees", getEmployees);
 router.put("/role/:id", authenticateAdmin, updateUserRole);
 router.delete("/:id", deleteUser);
 router.patch("/:id/reactivate", reactivateUser);
@@ -63,5 +56,15 @@ router.patch("/:id/reactivate", reactivateUser);
 router.patch("/info", updateUserInfo);
 
 router.post("/new", authenticateAdmin, createUser);
+
+// get /:id để ở cuối.
+/**
+ * API lấy thông tin người dùng theo ID
+ * @route GET /api/user/:id
+ * @description Người dùng lấy thông tin của mình
+ * @access User, Staff, Manager, Administrator.
+ * @author TheVi
+ */
+router.get("/:id", getUserById);
 
 export default router;

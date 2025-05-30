@@ -72,21 +72,18 @@ export const updateAvatar = async (req, res) => {
     return sendResponse(res, 500, false, "Lỗi máy chủ nội bộ");
   }
 };
-const buildUserQuery = (baseQuery, username, role, status) => {
-  if (username && username.trim() !== "") {
-    baseQuery.username = { $regex: username.trim(), $options: "i" }; // Tìm kiếm không phân biệt hoa thường
+function buildUserQuery(baseQuery = {}, username = "", role = "", status = "") {
+  if (username) baseQuery.username = { $regex: username, $options: "i" };
+  if (role) {
+    if (Array.isArray(role)) {
+      baseQuery.role = { $in: role };
+    } else {
+      baseQuery.role = role;
+    }
   }
-
-  if (role && role.trim() !== "") {
-    baseQuery.role = role.trim();
-  }
-
-  if (status && status.trim() !== "") {
-    baseQuery.status = status.trim();
-  }
-
+  if (status) baseQuery.status = status;
   return baseQuery;
-};
+}
 // Lấy danh sách tất cả users
 export const getAllUsers = async (req, res) => {
   try {
@@ -94,10 +91,10 @@ export const getAllUsers = async (req, res) => {
     const limit = parseInt(req.body.limit) || 10; // Số lượng user mỗi trang
     const skip = (page - 1) * limit;
 
-    const { username = "", role = "", status = "" } = req.body; // Nhận thêm role và status từ body
+    const { username = "", status = "" } = req.body;
 
     // Xây dựng query tìm kiếm
-    let query = buildUserQuery({}, username, role, status);
+    let query = buildUserQuery({}, username, "User", status);
 
     // Thực hiện truy vấn
     const users = await User.find(query)
@@ -319,5 +316,58 @@ export const updateUserRole = async (req, res) => {
   } catch (error) {
     console.log("Error in updateUserRole:", error);
     sendResponse(res, 500, false, "Lỗi server");
+  }
+};
+
+export const getEmployees = async (req, res) => {
+  try {
+    const page = parseInt(req.body.params?.page) || 1;
+    const limit = parseInt(req.body.params?.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const username = req.body.params?.username || "";
+    const status = req.body.params?.status || "";
+    let role = req.body.params?.role || "";
+
+    if (role && typeof role === "string") {
+      role = [role];
+    }
+    // Fallback to default
+    if (!role.length) {
+      role = ["Manager", "Employee"];
+    }
+
+    const query = buildUserQuery({ role: { $in: role } }, username, role, status);
+    console.log("Try fetching employees with query:", query);
+
+    const users = await User.find(query)
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    return res.status(200).json({
+      success: true,
+      message:
+        users.length > 0
+          ? "Lấy danh sách user thành công"
+          : "Không có user nào khớp với điều kiện lọc",
+      data: {
+        users,
+        totalUsers,
+        totalPages,
+        currentPage: page,
+        limit,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi trong getEmployees:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi máy chủ nội bộ",
+    });
   }
 };
