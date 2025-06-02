@@ -6,7 +6,13 @@ import { sendResponse } from "../utils/responseHandler.js";
 
 export const getAllActiveMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({ status: "active" });
+    const today = new Date();
+
+    const movies = await Movie.find({
+      status: "active",
+      endDate: { $gte: today }
+    });
+
     return sendResponse(
       res,
       200,
