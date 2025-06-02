@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import https from "https";
 import { sendResponse } from "../utils/responseHandler.js";
+import { frontendURL } from "../constants/constants.js";
 
 export const paymentMomo = async (req, res) => {
   try {
@@ -37,10 +38,10 @@ export const paymentMomo = async (req, res) => {
     // const expireTime = new Date();
     // expireTime.setMinutes(expireTime.getMinutes() + 5);
     const config = {
-      accessKey: "F8BBA842ECF85",
-      secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
+      accessKey: process.env.MOMO_ACCESS_KEY,
+      secretKey: process.env.MOMO_SECRET_KEY,
       partnerCode: "MOMO",
-      redirectUrl: "http://localhost:3000/thankyou",
+      redirectUrl: `${frontendURL}/thankyou`,
       ipnUrl: "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b",
       requestType: "payWithMethod",
       orderGroupId: "",
