@@ -4,11 +4,13 @@ import mongoose from "mongoose";
  * @returns {Promise<void>}
  */
 const connectDB = async () => {
+  const isDev = process.env.NODE_ENV !== "production";
+  const uri = isDev ? "mongodb://localhost:27017/vcinep" : process.env.CONNECT_STRING;
   try {
-    await mongoose.connect(process.env.CONNECT_STRING);
-    console.log("Kết nối database thành công");
+    await mongoose.connect(uri);
+    console.log(`Connected to ${isDev ? "Local DB" : "Production DB"}`);
   } catch (error) {
-    console.error("Lỗi kết nối database:", error.message);
+    console.error("Error connecting database:", error.message);
     process.exit(1);
   }
 };
