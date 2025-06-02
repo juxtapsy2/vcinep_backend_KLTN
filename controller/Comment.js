@@ -2,6 +2,120 @@ import Comment from "../models/CommentModel.js";
 import { sendResponse } from "../utils/responseHandler.js";
 import mongoose from "mongoose";
 // Thêm một bình luận mới
+export const getComments = async (req, res) => {
+  try {
+    const { 
+      content, 
+      movieId, 
+      startDate, 
+      endDate,
+      page = 1, 
+      limit = 10,
+      isRootOnly = false // Thêm tham số mới để lựa chọn
+    } = req.body;
+
+    // Build filter object
+    const filter = { 
+      status: "active"
+    };
+
+    // Thêm điều kiện chỉ lấy bình luận gốc nếu được yêu cầu
+    if (isRootOnly) {
+      filter.parentComment = null;
+    }
+
+    // Các filter khác giữ nguyên...
+    if (content) {
+      filter.content = { $regex: content, $options: "i" };
+    }
+
+    if (movieId) {
+      if (!mongoose.Types.ObjectId.isValid(movieId)) {
+        return sendResponse(res, 400, false, "ID phim không hợp lệ");
+      }
+      filter.movie = new mongoose.Types.ObjectId(movieId);
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    // Aggregation pipeline giữ nguyên
+    const comments = await Comment.aggregate([
+      { $match: filter },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: parseInt(limit) },
+      {
+        $lookup: {
+          from: "movies",
+          localField: "movie",
+          foreignField: "_id",
+          as: "movieData"
+        }
+      },
+      { $unwind: "$movieData" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "userData"
+        }
+      },
+      { $unwind: "$userData" },
+      {
+        $project: {
+          _id: 1,
+          parentComment: 1, // Thêm trường này để biết bình luận có phải là reply không
+          "movieData._id": 1,
+          "movieData.title": 1,
+          "userData.username": 1,
+          "userData.avatar": 1,
+          content: 1,
+          createdAt: 1
+        }
+      }
+    ]);
+
+    const totalComments = await Comment.countDocuments(filter);
+
+    // Format response thêm thông tin parentComment
+    const formattedComments = comments.map(comment => ({
+      commentId: comment._id,
+      movieId: comment.movieData._id,
+      movieTitle: comment.movieData.title,
+      username: comment.userData.username,
+      userAvatar: comment.userData.avatar,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      isRootComment: !comment.parentComment
+    }));
+
+    const pagination = {
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalComments / limit),
+      totalComments: totalComments,
+      commentsPerPage: parseInt(limit)
+    };
+
+    return sendResponse(res, 200, true, "Lấy danh sách bình luận thành công", {
+      comments: formattedComments,
+      pagination
+    });
+  } catch (error) {
+    console.error("Lỗi trong getComments:", error);
+    return sendResponse(res, 500, false, "Lỗi máy chủ");
+  }
+};
 export const addComment = async (req, res) => {
   try {
     const { movie, user, content, parentComment } = req.body;

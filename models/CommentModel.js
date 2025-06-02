@@ -4,8 +4,8 @@ const { Schema } = mongoose;
 const CommentSchema = new Schema(
   {
     parentComment: {
-      type: Schema.Types.ObjectId, // Thay đổi type từ String sang ObjectId
-      ref: "Comment", // Thêm ref để reference đến Comment model
+      type: Schema.Types.ObjectId, 
+      ref: "Comment", 
       default: null,
     },
     movie: {

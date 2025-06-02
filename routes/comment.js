@@ -4,6 +4,7 @@ import {
   updateComment,
   deleteComment,
   getCommentsByMovie,
+  getComments,
 } from "../controller/Comment.js";
 
 const router = express.Router();
@@ -35,5 +36,10 @@ router.delete("/:id", deleteComment);
  * @access Public
  */
 router.get("/movie/:movieId", getCommentsByMovie);
-
+/**
+ * @route POST /api/comments/all
+ * @description Lấy tất cả bình luận
+ * @access Private
+ */
+router.post("/all", getComments);
 export default router;
