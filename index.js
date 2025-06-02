@@ -24,7 +24,7 @@ import statisticalRouter from "./routes/statistical.js";
 import { Server } from "socket.io";
 import SeatStatus from "./models/SeatStatusModel.js";
 import { createServer } from "node:http";
-import { frontendURL, backendURL } from "./constants/constants.js";
+import { isDev, frontendURL, backendURL } from "./constants/constants.js";
 // import { getSeatsData } from "./utils/getSeatsData.js";
 dotenv.config();
 connectDB();
@@ -57,8 +57,25 @@ app.get("/", (req, res) => {
 console.log("Frontend URL:", frontendURL);
 const io = new Server(server, {
   cors: {
-    origin: frontendURL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow tools like Postman or curl
+
+      // In dev
+      if (isDev && origin.startsWith("http://localhost:3000")) {
+        return callback(null, true);
+      }
+
+      // In prod
+      const allowedProdOrigin = process.env.FRONTEND_URL;
+      const isVercelPreview = origin.endsWith(".vercel.app");
+
+      if (origin === allowedProdOrigin || isVercelPreview) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
   },
 });
 
