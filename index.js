@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import http from "http";
 import connectDB from "./config/db.js";
 import { getSeatsData } from "./utils/getSeatsData.js";
 import authRoute from "./routes/auth.js";
