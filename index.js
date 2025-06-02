@@ -24,6 +24,7 @@ import statisticalRouter from "./routes/statistical.js";
 import { Server } from "socket.io";
 import SeatStatus from "./models/SeatStatusModel.js";
 import { createServer } from "node:http";
+import { frontendURL, backendURL } from "./constants/constants.js";
 // import { getSeatsData } from "./utils/getSeatsData.js";
 dotenv.config();
 connectDB();
@@ -53,12 +54,19 @@ app.get("/", (req, res) => {
   res.send("Hello world!");
 });
 
+console.log("Frontend URL:", frontendURL);
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: frontendURL,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   },
 });
+
+const PORT = process.env.PORT || 8800;
+server.listen(PORT, () => {
+  console.log(`Server running on ${backendURL}`);
+});
+
 // Chat
 const rooms = new Map();
 const unreadMessages = new Map();
@@ -256,9 +264,4 @@ io.on("connection", (socket) => {
       console.log(`Socket ${socket.id} left room ${currentRoom}`);
     }
   });
-});
-
-const PORT = process.env.PORT || 8800;
-server.listen(PORT, () => {
-  console.log(`Server đang chạy trên PORT: ${PORT}`);
 });
