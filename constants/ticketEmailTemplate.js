@@ -198,10 +198,6 @@ export const ticketEmailTemplate = (ticket, user, qrCode) => {
                               "vi-VN"
                             )} VNĐ</span>
                         </div>
-                          <div class="qr-code">
-                <p>Quét mã QR dưới đây để check-in:</p>
-                <img src="${qrCode}" alt="QR Code" />
-            </div>
                     </div>
                     
                     <div class="barcode">
