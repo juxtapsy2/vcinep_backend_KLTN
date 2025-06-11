@@ -6,6 +6,8 @@ import {
   cleanRequest,
   createMovieSuggestionPrompt,
 } from "../utils/suggestionMovieGemini.js"; // Đường dẫn đến hàm tạo prompt của bạn
+
+import { reviewSensePrompt, getCommentByMovieSlug } from "../utils/reviewSenseGemini.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -48,6 +50,31 @@ export const suggestionMovieGemini = async (req, res) => {
     const request = cleanRequest(result.response.text());
     const requestMovies = await getMoviesWithReasons(request);
     res.status(200).json({ response: requestMovies });
+  } catch (error) {
+    console.error("Error generating content:", error);
+    res.status(500).json({ message: "Error generating content" });
+  }
+};
+
+export const reviewSenseGemini = async (req, res) => {
+  const { slug } = req.body;
+  if (!slug) {
+    return res.status(400).json({ message: "Prompt is required" });
+  }
+
+  try {
+    const comment = await getCommentByMovieSlug(slug);
+
+    const prompt = reviewSensePrompt(comment);
+
+    console.log("Prompt:", prompt);
+
+    const result = await model.generateContent(prompt);
+
+    // const request = cleanRequest(result.response.text());
+    // const requestMovies = await getMoviesWithReasons(request);
+    console.log(prompt)
+    res.status(200).json({ response: result.response.text()});
   } catch (error) {
     console.error("Error generating content:", error);
     res.status(500).json({ message: "Error generating content" });
