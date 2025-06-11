@@ -820,11 +820,12 @@ export const getFullShowtimesByDate = async (req, res) => {
       return sendResponse(res, 200, false, "No showtimes found for this date");
     }
 
-    // Nhóm các suất chiếu theo phim
+    // Nhóm các suất chiếu theo phim và loại bỏ trùng lặp showTime
     const moviesMap = new Map();
 
     showtimes.forEach((showtime) => {
       const movieId = showtime.movieId._id.toString();
+      const showTimeKey = showtime.showTime; // Sử dụng showTime làm key để kiểm tra trùng lặp
 
       if (!moviesMap.has(movieId)) {
         moviesMap.set(movieId, {
@@ -847,24 +848,33 @@ export const getFullShowtimesByDate = async (req, res) => {
             rating: showtime.movieId.rating,
             views: showtime.movieId.views,
             status: showtime.movieId.status,
-            // Thêm các trường khác nếu cần
           },
           showtimes: [],
+          showTimeSet: new Set(), // Sử dụng Set để theo dõi các showTime đã thêm
         });
       }
 
-      moviesMap.get(movieId).showtimes.push({
-        _id: showtime._id,
-        showTime: showtime.showTime,
-        theaterId: showtime.theaterId,
-        type: showtime.type,
-        price: showtime.price,
-        availableSeats: showtime.availableSeats,
-      });
+      const movieEntry = moviesMap.get(movieId);
+      
+      // Chỉ thêm nếu showTime chưa tồn tại
+      if (!movieEntry.showTimeSet.has(showTimeKey)) {
+        movieEntry.showTimeSet.add(showTimeKey);
+        movieEntry.showtimes.push({
+          _id: showtime._id,
+          showTime: showtime.showTime,
+          theaterId: showtime.theaterId,
+          type: showtime.type,
+          price: showtime.price,
+          availableSeats: showtime.availableSeats,
+        });
+      }
     });
 
-    // Chuyển Map thành mảng
-    const result = Array.from(moviesMap.values());
+    // Chuyển Map thành mảng và loại bỏ showTimeSet không cần thiết
+    const result = Array.from(moviesMap.values()).map(item => {
+      delete item.showTimeSet;
+      return item;
+    });
 
     // Sắp xếp các suất chiếu theo thời gian
     result.forEach((movie) => {
