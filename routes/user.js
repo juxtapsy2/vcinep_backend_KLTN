@@ -56,7 +56,7 @@ router.patch("/:id/reactivate", reactivateUser);
  */
 router.patch("/info", updateUserInfo);
 
-router.post("/new", authenticateAdmin, createUser);
+router.post("/new", authenticateUser, createUser);
 
 // get /:id để ở cuối.
 /**
