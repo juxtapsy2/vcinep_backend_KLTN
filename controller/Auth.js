@@ -78,6 +78,7 @@ export const loginAccount = async (req, res) => {
           gender: user.gender,
           dateOfBirth: user.dateOfBirth,
           phoneNumber: user.phoneNumber,
+          idCinema: user.idCinema,
         },
         process.env.SECRET_KEY,
         { expiresIn: "1h" }

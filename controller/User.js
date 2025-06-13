@@ -321,14 +321,15 @@ export const updateUserRole = async (req, res) => {
 
 export const getEmployees = async (req, res) => {
   try {
-    const page = parseInt(req.body.params?.page) || 1;
-    const limit = parseInt(req.body.params?.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const username = req.body.params?.username || "";
-    const status = req.body.params?.status || "";
-    let role = req.body.params?.role || "";
+    const username = req.query.username || "";
+    const status = req.query.status || "";
+    let role = req.query.role || "";
 
+    console.log(req.query);
     if (role && typeof role === "string") {
       role = [role];
     }
@@ -337,7 +338,15 @@ export const getEmployees = async (req, res) => {
       role = ["Manager", "Employee"];
     }
 
-    const query = buildUserQuery({ role: { $in: role } }, username, role, status);
+    const baseQuery = {
+      role: { $in: role },
+    };
+    // Restrict Managers to their own cinema
+    if (req.user?.role === "Manager") {
+      baseQuery.idCinema = req.user.idCinema;
+    }
+
+    const query = buildUserQuery(baseQuery, username, role, status);
     console.log("Try fetching employees with query:", query);
 
     const users = await User.find(query)

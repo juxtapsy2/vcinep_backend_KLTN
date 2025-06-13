@@ -12,6 +12,7 @@ import {
 } from "../controller/User.js";
 import { authenticateCurrentUser } from "../middleware/authenticateCurrentUser.js";
 import { authenticateAdmin } from "../middleware/authenticateAdmin.js";
+import { authenticateUser } from "../middleware/authenticateUser.js";
 const router = express.Router();
 
 /**
@@ -41,7 +42,7 @@ router.post("/list", getAllUsers);
  * @param {String} id - ID của user cần xóa
  * @author TheVi
  */
-router.get("/employees", getEmployees);
+router.get("/employees", authenticateUser, getEmployees);
 router.put("/role/:id", authenticateAdmin, updateUserRole);
 router.delete("/:id", deleteUser);
 router.patch("/:id/reactivate", reactivateUser);
