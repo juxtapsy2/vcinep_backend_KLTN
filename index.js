@@ -119,13 +119,15 @@ io.on("connection", (socket) => {
     };
     rooms.get(room).push(chatMessage);
 
-    // Cập nhật số lượng tin nhắn chưa đọc
-    if (!unreadMessages.has(room)) {
-      unreadMessages.set(room, 0);
+    // Only increment unread count for messages sent by Emp
+    if (message.sender !== "Employee") {
+      if (!unreadMessages.has(room)) {
+        unreadMessages.set(room, 0);
+      }
+      unreadMessages.set(room, unreadMessages.get(room) + 1);
+      // Gửi tin chưa đọc cho nhân viên
+      io.emit("unread-messages", Object.fromEntries(unreadMessages));
     }
-    unreadMessages.set(room, unreadMessages.get(room) + 1);
-    // Gửi tin chưa đọc cho nhân viên
-    io.emit("unread-messages", Object.fromEntries(unreadMessages));
 
     // Nếu là tin nhắn đầu tiên, reply tự động
     if (rooms.get(room).length === 1 && message.sender !== "Employee") {
@@ -144,7 +146,7 @@ io.on("connection", (socket) => {
     // Cập nhật danh sách phòng trong trường hợp tin nhắn đến từ 1 người dùng mới
     io.emit("room-list", Array.from(rooms.keys()));
     // [For test only!!]
-    // Đọc nội dung tin nhắn trong console.log (highlighted)
+    // Nội dung tin nhắn trong log (highlighted)
     console.log(
       `\x1b[36mRoom ${socket.currentRoom}\x1b[0m - \x1b[33m${
         message.sender ? message.sender : "Guest"
