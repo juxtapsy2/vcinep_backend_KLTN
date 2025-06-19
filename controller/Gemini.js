@@ -56,6 +56,30 @@ export const suggestionMovieGemini = async (req, res) => {
   }
 };
 
+// export const reviewSenseGemini = async (req, res) => {
+//   const { slug } = req.body;
+//   if (!slug) {
+//     return res.status(400).json({ message: "Prompt is required" });
+//   }
+
+//   try {
+//     const comment = await getCommentByMovieSlug(slug);
+
+//     const prompt = reviewSensePrompt(comment);
+
+//     console.log("Prompt:", prompt);
+
+//     const result = await model.generateContent(prompt);
+
+//     // const request = cleanRequest(result.response.text());
+//     // const requestMovies = await getMoviesWithReasons(request);
+//     console.log(prompt)
+//     res.status(200).json({ response: result.response.text()});
+//   } catch (error) {
+//     console.error("Error generating content:", error);
+//     res.status(500).json({ message: "Error generating content" });
+//   }
+// };
 export const reviewSenseGemini = async (req, res) => {
   const { slug } = req.body;
   if (!slug) {
@@ -65,16 +89,17 @@ export const reviewSenseGemini = async (req, res) => {
   try {
     const comment = await getCommentByMovieSlug(slug);
 
+    if (!comment || (Array.isArray(comment) && comment.length === 0)) {
+      return res.status(200).json({ response: "Không có bình luận để đánh giá" });
+    }
+
     const prompt = reviewSensePrompt(comment);
 
     console.log("Prompt:", prompt);
 
     const result = await model.generateContent(prompt);
 
-    // const request = cleanRequest(result.response.text());
-    // const requestMovies = await getMoviesWithReasons(request);
-    console.log(prompt)
-    res.status(200).json({ response: result.response.text()});
+    res.status(200).json({ response: result.response.text() });
   } catch (error) {
     console.error("Error generating content:", error);
     res.status(500).json({ message: "Error generating content" });
